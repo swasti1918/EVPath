@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EVPath – Live Nav</title>
+
+  <!-- Google Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Floating Search Bar -->
+  <form id="search-bar" onsubmit="event.preventDefault(); buildRoute();">
+    <div class="input-wrap">
+      <input id="origin" placeholder="Start location" autocomplete="off" data-coords="" />
+    </div>
+
+    <button id="swap-btn" type="button" title="Swap">
+      <span class="material-icons">swap_vert</span>
+    </button>
+
+    <div class="input-wrap">
+      <input id="destination" placeholder="Destination" autocomplete="off" data-coords="" />
+    </div>
+
+    <button id="go" type="submit">Route</button>
+  </form>
+
+  <!-- Left Panel -->
+  <div id="left-panel">
+    <button id="map-toggle" title="Toggle Satellite">
+      <span class="material-icons">satellite</span>
+    </button>
+  </div>
+
+  <!-- Google Map Container -->
+  <div id="map"></div>
+
+  <!-- Bottom Navigation Card -->
+  <div id="nav-card" hidden>
+    <div id="turn-text">Head north…</div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA_AIc_0RlQfWwl8AN5G0xfAYNZQbv2CWY&libraries=places,geometry&callback=initMap">
+  </script>
+</body>
+</html>
