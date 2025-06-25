@@ -24,7 +24,6 @@ window.initMap = function () {
   setupYourLocationOption("origin");
   setupYourLocationOption("destination");
 
-  // Auto-fill origin with user's location on load
   navigator.geolocation.getCurrentPosition((pos) => {
     const coords = `${pos.coords.latitude},${pos.coords.longitude}`;
     const originInput = document.getElementById("origin");
@@ -51,7 +50,7 @@ function swapInputs() {
   buildRoute();
 }
 
-function buildRoute() {
+async function buildRoute() {
   const oInput = document.getElementById("origin");
   const dInput = document.getElementById("destination");
 
@@ -60,22 +59,50 @@ function buildRoute() {
 
   if (!originVal || !destVal) return alert("Enter both locations");
 
-  if (originVal.toLowerCase() === "your location" && oInput.dataset.coords) {
-    originVal = oInput.dataset.coords;
-  }
-  if (destVal.toLowerCase() === "your location" && dInput.dataset.coords) {
-    destVal = dInput.dataset.coords;
-  }
+  try {
+    const originCoords = originVal.toLowerCase() === "your location" && oInput.dataset.coords
+      ? oInput.dataset.coords
+      : await fetchCoordinatesFromBackend(originVal);
 
-  dirSvc.route({ origin: originVal, destination: destVal, travelMode: "DRIVING" }, (res, stat) => {
-    if (stat !== "OK") return alert("Route error: " + stat);
+    const destCoords = destVal.toLowerCase() === "your location" && dInput.dataset.coords
+      ? dInput.dataset.coords
+      : await fetchCoordinatesFromBackend(destVal);
 
-    dirRdr.setDirections(res);
-    steps = res.routes[0].legs[0].steps;
-    idx = 0;
-    showTurn(steps[0].instructions);
-    startTracking();
+    dirSvc.route({
+      origin: originCoords,
+      destination: destCoords,
+      travelMode: "DRIVING"
+    }, (res, stat) => {
+      if (stat !== "OK") return alert("Route error: " + stat);
+      dirRdr.setDirections(res);
+      steps = res.routes[0].legs[0].steps;
+      idx = 0;
+      showTurn(steps[0].instructions);
+      startTracking();
+    });
+
+  } catch (err) {
+    console.error("Failed to fetch coordinates:", err);
+    alert("Could not get coordinates from server.");
+  }
+}
+
+async function fetchCoordinatesFromBackend(address) {
+  const res = await fetch("/get_coordinates", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ address })
   });
+
+  if (!res.ok) {
+    const errMsg = await res.text();
+    throw new Error(errMsg || "Error fetching coordinates");
+  }
+
+  const data = await res.json();
+  return `${data.lat},${data.lng}`;
 }
 
 function startTracking() {
@@ -131,7 +158,6 @@ function clearRoute() {
 
 function setupYourLocationOption(inputId) {
   const inputEl = document.getElementById(inputId);
-
   inputEl.addEventListener("input", () => {
     setTimeout(() => {
       const pacContainers = document.querySelectorAll(".pac-container");
